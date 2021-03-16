@@ -15,13 +15,13 @@ class FmDeleteCommand(AppCommand):
             paths_to_display = [
                 [
                     "Confirm",
-                    "Send {0} items to trash".format(len(self.paths))
+                    "Delete {0} items".format(len(self.paths))
                     if len(self.paths) > 1
-                    else "Send item to trash",
+                    else "Delete item",
                 ],
                 [
-                    "Cancel All",
-                    "Select an individual item to remove it from the deletion list",
+                    "Cancel",
+                    "Do not delete any files"
                 ],
             ]
             paths_to_display.extend(
@@ -36,6 +36,7 @@ class FmDeleteCommand(AppCommand):
             self.delete(index=0)
 
     def delete(self, index):
+        # Only delete if confrim (index 0) was selected
         if index == 0:
             for path in self.paths:
                 for window in sublime.windows():
@@ -45,14 +46,9 @@ class FmDeleteCommand(AppCommand):
                         view = window.find_open_file(path)
 
                 try:
-                    send2trash(path)
+                    os.remove(path)
                 except OSError as e:
                     sublime.error_message("Unable to send to trash: {}".format(e))
                     raise OSError("Unable to send {0!r} to trash: {1}".format(path, e))
 
             refresh_sidebar(self.settings, self.window)
-
-        elif index > 1:
-            self.paths.pop(index - 2)
-            if self.paths:
-                self.run(self.paths)
